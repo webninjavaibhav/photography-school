@@ -1,0 +1,37 @@
+:root {
+  /*  COLORS */
+  --background: #1e1e1e;
+  --textPrimary: #eeecec;
+  --Badge: #2b5341;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  position: relative;
+  font-weight: normal;
+  font-family: 'Open Sans', sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--textPrimary);
+}
+input::placeholder {
+  color: var(--textPrimary);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 22px;
+  font-family: 'Open Sans', sans-serif;
+}
+/* input:focus-within::placeholder {
+  color: #3a3a3a;
+  font-size: 12px;
+  line-height: 16px;
+  transition: all 0.3s;
+  position: absolute;
+  top: 12px;
+} */
+
