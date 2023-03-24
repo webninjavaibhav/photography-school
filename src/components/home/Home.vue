@@ -20,7 +20,7 @@
         </div>
       </div>
       <div class="mobile-container">
-        <MobileCarousel :autoplay="3000" :slides="slides" />
+        <MobileCarousel :autoplay="8000" :slides="slides" />
       </div>
     </div>
   </div>

@@ -15,9 +15,9 @@
     <div class="progress-bar" 
         v-if="slides?.length">
       <ProgressBar
-        :activeSlide="0"
-        :timer="0"
-        :totalSlide="0"
+      :activeSlide="activeSlide"
+        :timer="autoPlayDefaultTimer"
+        :totalSlide="totalSlidesLength"
       />
     </div>
   </div>
