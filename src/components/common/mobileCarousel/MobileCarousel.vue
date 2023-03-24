@@ -1,21 +1,23 @@
 <template>
   <div class="phone-section">
     <div class="phone-image">
+      <img class="phone-image-mokup" :src="mobileScreenUrl" />
       <div>
-        <img :class="carouselImgClass" :src="getcurrentUrl(activeImgUrl)" alt="" />
-        <img :class="carouselImgBgClass" :src="getcurrentUrl(activeImgUrl)" alt="" />
+        <img :class="carouselImgClass" :src="activeImgUrl" alt="" />
+        <img :class="carouselImgBgClass" :src="activeImgUrl" alt="" />
       </div>
-      <img :class="smallCarouselImgClass" :src="getcurrentUrl(lastImgUrl)" alt="" />
-      <img class="zoom-btn" src="../../../assets/images/FE-test-assets.svg" alt="" />
+      <img :class="smallCarouselImgClass" :src="lastImgUrl" alt="" />
+      <img class="zoom-btn" src="@/assets/images/FE-test-assets.svg" alt="" />
       <div class="phone-screen-bg" src="" alt=""></div>
       <div class="phone-screen-thumbnail"></div>
       <button @click="onClickHandler"></button>
     </div>
-    <div class="progress-bar">
+    <div class="progress-bar" 
+        v-if="slides?.length">
       <ProgressBar
-        :activeSlide="activeSlide"
-        :activeIndex="index"
-        v-for="(_, index) in slides?.images?.length"
+        :activeSlide="0"
+        :timer="0"
+        :totalSlide="0"
       />
     </div>
   </div>
@@ -23,9 +25,19 @@
 
 <script lang="ts">
 import type { LooseRequired } from '@vue/shared'
-import { ref, computed, watch, onMounted, onUnmounted, defineProps, type PropType } from 'vue'
+import {
+  ref,
+  computed,
+  watch,
+  onMounted,
+  onUnmounted,
+  type PropType,
+  watchEffect
+} from 'vue'
 import type { IProps } from './mobileTypes'
-import ProgressBar from '../ProgressBar.vue'
+import ProgressBar from '@/components/common/ProgressBar.vue'
+import { getcurrentUrl } from '@/utils/utils'
+import { useBreakpoint } from '@/composables/useBreakpoint'
 export default {
   props: {
     autoplay: {
@@ -51,8 +63,10 @@ export default {
     const activeSlide = ref<number>(props.activeSlide || 0)
     const intervalRef = ref<any>()
     const autoPlayDefaultTimer = ref<number>(props.autoplay ? props.autoplay : 8000)
-    const autoPlayTimer = ref<number>(autoPlayDefaultTimer.value / 1000)
+    const autoPlayTimer = ref<number>(Math.round(autoPlayDefaultTimer.value / 1000))
     const isSlideChange = ref<boolean>(false)
+    const breakpoint = useBreakpoint()
+    const mediaCode = ref<string>('')
 
     /**
      *  Funtions
@@ -63,43 +77,66 @@ export default {
       }
     }
 
-    const fadeEffectHandler = () => {
+    const fadeEffectHandler = (duration: number) => {
       isSlideChange.value = true
       setTimeout(() => {
         activeSlide.value =
-          activeSlide.value === slidesItem.value.images.length - 1 ? 0 : activeSlide.value + 1
+          activeSlide.value === slidesItem.value.length - 1 ? 0 : activeSlide.value + 1
         isSlideChange.value = false
-      }, 300)
-    }
-
-    const getcurrentUrl = (url: string) => {
-      return new URL(`../../../assets/images/${url}`, import.meta.url).href
+      }, duration)
     }
 
     const onClickHandler = () => {
-      autoPlayTimer.value = autoPlayDefaultTimer.value
-      fadeEffectHandler()
+      autoPlayTimer.value = Math.round(autoPlayDefaultTimer.value / 1000)
+      fadeEffectHandler(100)
     }
+
+    watch(
+      () => breakpoint,
+      () => {
+        console.log(breakpoint.mediaCode.value)
+      }
+    )
+
+    watchEffect(() => {
+      mediaCode.value = breakpoint.mediaCode.value ? breakpoint.mediaCode.value : ''
+    })
 
     /**
      *  Computeds
      */
     const activeImgUrl = computed(() =>
-      slidesItem.value.images?.length ? slidesItem.value.images[activeSlide.value] : ''
+      getcurrentUrl(
+        slidesItem.value?.length && mediaCode.value
+          ? slidesItem.value?.[activeSlide.value]
+          : '',
+        mediaCode.value
+      )
     )
+
+    const totalSlidesLength = computed(() => slidesItem.value?.length || 0)
+
+    const mobileScreenUrl = computed(() => getcurrentUrl('iPhone-mokup.png', mediaCode.value))
 
     const lastImgUrl = computed(() => {
       if (!activeSlide.value) {
-        return slidesItem.value?.images?.length
-          ? slidesItem.value?.smallImages[slidesItem.value.images.length - 1]
-          : ''
+        return getcurrentUrl(
+          slidesItem.value?.length && mediaCode.value
+            ? `small-${slidesItem.value?.[slidesItem.value?.length - 1]}`
+            : '',
+          mediaCode.value
+        )
       }
-      return slidesItem.value?.images?.length
-        ? slidesItem.value?.smallImages[activeSlide.value - 1]
-        : ''
+      return getcurrentUrl(
+        slidesItem.value?.length
+          ? `small-${slidesItem.value?.[activeSlide.value - 1]}`
+          : '',
+        mediaCode.value
+      )
     })
 
     const carouselImgClass = computed(() => `carousel-img ${isSlideChange.value ? 'fade' : ''}`)
+
     const carouselImgBgClass = computed(
       () => `carousel-img mobile-bg-img ${isSlideChange.value ? 'fade' : ''}`
     )
@@ -112,8 +149,8 @@ export default {
      */
     watch(autoPlayTimer, (newTimer) => {
       if (newTimer < 0) {
-        autoPlayTimer.value = autoPlayDefaultTimer.value / 1000
-        fadeEffectHandler()
+        autoPlayTimer.value = Math.round(autoPlayDefaultTimer.value / 1000)
+        fadeEffectHandler(300)
       }
     })
 
@@ -140,29 +177,38 @@ export default {
       smallCarouselImgClass,
       autoPlayTimer,
       carouselImgBgClass,
-      autoPlayDefaultTimer
+      autoPlayDefaultTimer,
+      breakpoint,
+      mobileScreenUrl,
+      totalSlidesLength,
     }
   },
+  provide: {},
   components: {
-    ProgressBar
+    ProgressBar,
   }
 }
 </script>
 
 <style scoped>
+.phone-image-mokup {
+  max-width: 335px;
+  position: absolute;
+  z-index: 0;
+}
 .phone-screen-bg {
   background-color: black;
   left: 14px;
-  top: 114.5px;
+  top: 112.5px;
   position: absolute;
   width: 308px;
-  height: 416px;
+  height: 423px;
   z-index: 0;
 }
 
 .phone-screen-thumbnail {
-  left: 27px;
-  bottom: 73.6px;
+  left: 26px;
+  bottom: 69.6px;
   position: absolute;
   background-color: black;
   width: 42px;
@@ -170,6 +216,7 @@ export default {
   z-index: 0;
 }
 .carousel-img {
+  max-width: 306px;
   background-color: black;
   left: 14px;
   top: 115.5px;
@@ -195,8 +242,9 @@ export default {
   opacity: 0;
 }
 .small-carousel-img {
+  max-width: 40px;
   left: 27px;
-  bottom: 73.6px;
+  bottom: 70.6px;
   position: absolute;
   opacity: 1;
   z-index: 1;
@@ -218,16 +266,11 @@ button {
   bottom: 0;
   position: absolute;
   left: 58%;
-  bottom: 20px;
+  bottom: 18px;
   transform: translate(-50px, -50px);
   cursor: pointer;
 }
 .phone-image {
-  background-image: url('../../../assets/images/iPhone-mokup.png');
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
   width: 100%;
   max-width: 335px;
   margin: auto;
@@ -253,7 +296,6 @@ button {
   width: 244px;
   margin: auto;
   gap: 8px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);  
+  display: flex;
 }
 </style>

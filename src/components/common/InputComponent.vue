@@ -5,7 +5,7 @@
       @input="(e: any) => onTextChage(e.target.value)"
       :class="`input-component ${isError ? 'input-error' : ''}`"
     />
-    <img class="mail-img" src="../../assets/images/mail-icon.svg" alt="" />
+    <img class="mail-img" src="@/assets/images/mail-icon.svg" alt="" />
     <div class="error-input" v-if="isError">Please enter a valid email</div>
     <div class="enter-input" v-if="placeholderRef && !isError">Enter your Email Address</div>
   </div>
@@ -28,15 +28,15 @@ export default {
     placeholder: {
       type: String,
       require: false
-    },
+    }
   },
   emits: ['on-change'],
   setup(props, context) {
-    const { children, isError ,placeholder: placeholderValue  } = toRefs(props)
+    const { children, isError, placeholder: placeholderValue } = toRefs(props)
     const placeholderRef = ref(false)
     const onTextChage = (value: string) => {
-      if(value.length) placeholderRef.value = true;
-      else placeholderRef.value = true;
+      if (!value.length) placeholderRef.value = false
+      else placeholderRef.value = true
       context.emit('on-change', value)
     }
     return { children, onTextChage, isError, placeholderRef, placeholderValue }
@@ -54,12 +54,12 @@ export default {
   top: 4px;
   left: 17px;
 }
-.enter-input{
+.enter-input {
   position: absolute;
   font-weight: 400;
   font-size: 12px;
   line-height: 16px;
-  color: #3A3A3A;
+  color: #3a3a3a;
   top: 4px;
   left: 17px;
 }
